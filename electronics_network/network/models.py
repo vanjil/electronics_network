@@ -1,12 +1,23 @@
 from django.db import models
 
-class NetworkUnit(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Название")
-    contact_email = models.EmailField(verbose_name="Контактный email")
+class Address(models.Model):
     country = models.CharField(max_length=100, verbose_name="Страна")
     city = models.CharField(max_length=100, verbose_name="Город")
     street = models.CharField(max_length=100, verbose_name="Улица")
     building_number = models.CharField(max_length=10, verbose_name="Номер дома")
+
+    def __str__(self):
+        return f"{self.country}, {self.city}, {self.street} {self.building_number}"
+
+    class Meta:
+        verbose_name = "Адрес"
+        verbose_name_plural = "Адреса"
+
+
+class NetworkUnit(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название")
+    contact_email = models.EmailField(verbose_name="Контактный email")
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name="network_units", verbose_name="Адрес", null=True )
     supplier = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -25,16 +36,12 @@ class NetworkUnit(models.Model):
         verbose_name = "Звено сети"
         verbose_name_plural = "Звенья сети"
 
+
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название продукта")
     model = models.CharField(max_length=100, verbose_name="Модель")
     release_date = models.DateField(verbose_name="Дата выхода на рынок")
-    network_unit = models.ForeignKey(
-        NetworkUnit,
-        on_delete=models.CASCADE,
-        related_name="products",
-        verbose_name="Звено сети"
-    )
+    suppliers = models.ManyToManyField(NetworkUnit, related_name="products", verbose_name="Поставщики")
 
     def __str__(self):
         return f"{self.name} ({self.model})"
